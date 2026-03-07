@@ -33,7 +33,9 @@ jobs:
 
       - name: Print debug SHA-1
         working-directory: android
-        run: ./gradlew signingReport 2>&1 | grep -A1 "SHA1:"
+        run: |
+          chmod +x gradlew
+          ./gradlew signingReport 2>&1 | grep "SHA1:" || true
 
       - name: Build debug APK
         working-directory: android
