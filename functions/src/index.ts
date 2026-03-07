@@ -1,4 +1,4 @@
-import { onRequest } from "firebase-functions/v2/https";
+import { onRequest } from "firebase-functions/v1/https";
 import * as admin from "firebase-admin";
 import cors from "cors";
 
@@ -7,7 +7,6 @@ admin.initializeApp();
 const corsHandler = cors({ origin: true });
 
 export const scannerUpload = onRequest(
-  { region: "europe-west1", maxInstances: 10 },
   (req, res) => {
     corsHandler(req, res, async () => {
       // Only POST

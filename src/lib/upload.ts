@@ -1,13 +1,13 @@
 import { PDFDocument } from "pdf-lib";
 import SparkMD5 from "spark-md5";
+import { ref, uploadBytes } from "firebase/storage";
 import {
   listScans,
   getScanPages,
   updateScanStatus,
   ScanMeta,
 } from "./storage";
-import { UPLOAD_FUNCTION_URL } from "../constants";
-import { auth } from "../firebase";
+import { auth, storage } from "../firebase";
 
 // ── Build PDF ──
 
@@ -32,29 +32,15 @@ export function hashBytes(data: Uint8Array): string {
   return spark.end();
 }
 
-// ── Upload one PDF ──
+// ── Upload one PDF to GCS via Firebase Storage ──
 
 async function uploadOne(
   filename: string,
-  pdfBytes: Uint8Array,
-  token: string
+  pdfBytes: Uint8Array
 ): Promise<boolean> {
-  let b64 = "";
-  const chunk = 32768;
-  for (let i = 0; i < pdfBytes.length; i += chunk) {
-    b64 += String.fromCharCode(...pdfBytes.subarray(i, i + chunk));
-  }
-  b64 = btoa(b64);
-
-  const res = await fetch(UPLOAD_FUNCTION_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({ filename, data: b64 }),
-  });
-  return res.ok;
+  const fileRef = ref(storage, filename);
+  await uploadBytes(fileRef, pdfBytes, { contentType: "application/pdf" });
+  return true;
 }
 
 // ── Generate filename ──
@@ -77,8 +63,7 @@ export async function processQueue(onProgress?: ProgressCb): Promise<void> {
   running = true;
 
   try {
-    const token = await auth.currentUser?.getIdToken();
-    if (!token) return;
+    if (!auth.currentUser) return;
 
     const scans = await listScans();
     const pending = scans.filter(
@@ -119,7 +104,7 @@ export async function processQueue(onProgress?: ProgressCb): Promise<void> {
           continue;
         }
 
-        const ok = await uploadOne(filename, pdfBytes, token);
+        const ok = await uploadOne(filename, pdfBytes);
         if (ok) {
           sentHashes.add(hash);
           await updateScanStatus(scan.id, "sent", { filename, hash });

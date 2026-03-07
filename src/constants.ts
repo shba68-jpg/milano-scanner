@@ -9,6 +9,3 @@ export const RESTAURANTS = [
 export function getRestaurantLabel(id: string): string {
   return RESTAURANTS.find((r) => r.id === id)?.label || id;
 }
-
-export const UPLOAD_FUNCTION_URL =
-  "https://europe-west1-milano-os-core.cloudfunctions.net/scannerUpload";
