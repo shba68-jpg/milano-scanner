@@ -1,0 +1,100 @@
+/* ═══════════════════════════════════════════
+   Milano Scanner — Capacitor native dark UI
+   ═══════════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#09090f;--s1:#13131a;--s2:#1b1b24;--s3:#252530;
+  --brd:#2a2a36;--pri:#3B82F6;--pri2:#2563EB;
+  --txt:#f0f0f5;--dim:#71717a;--faint:#3e3e48;
+  --ok:#22c55e;--err:#ef4444;--warn:#f59e0b;
+  --r:14px;--rs:10px;
+}
+html,body,#root{height:100%;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
+  direction:rtl;overflow:hidden;-webkit-font-smoothing:antialiased}
+
+/* ── Layout ── */
+.page{height:100%;display:flex;flex-direction:column}
+.home-page{padding-bottom:env(safe-area-inset-bottom,0px)}
+.center-col{display:flex;flex-direction:column;align-items:center;justify-content:center}
+.full{flex:1}
+
+/* ── Header ── */
+.hdr{display:flex;align-items:center;gap:10px;padding:12px 14px;
+  background:var(--s1);border-bottom:1px solid var(--brd);flex-shrink:0}
+.hdr-title{flex:1;text-align:center;font-size:16px;font-weight:600}
+
+/* ── Buttons ── */
+.btn{border:none;border-radius:var(--rs);padding:12px 20px;font-size:15px;
+  font-weight:600;cursor:pointer;min-height:46px;touch-action:manipulation;transition:opacity .15s}
+.btn:active{opacity:.8}.btn:disabled{opacity:.45}
+.pri{background:var(--pri);color:#fff}
+.sec{background:var(--s2);color:var(--txt);border:1px solid var(--brd)}
+.danger{background:#2a1015;color:var(--err);border:1px solid #3a1520}
+.full{width:100%}.small{padding:8px 14px;font-size:13px;min-height:36px}
+.mt8{margin-top:8px}
+
+.icn-btn{background:none;border:none;color:var(--dim);cursor:pointer;
+  padding:6px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.icn-btn:hover{background:var(--s2)}
+
+.rest-chip{background:var(--s2);border:1px solid var(--brd);color:var(--pri);
+  border-radius:20px;padding:5px 12px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+
+/* ── Login ── */
+.login-box{width:100%;max-width:330px;padding:0 20px;text-align:center}
+.login-icon{margin-bottom:14px}
+.login-box h1{font-size:22px;font-weight:700;margin-bottom:2px}
+.login-box form{display:flex;flex-direction:column;gap:10px;margin-top:28px}
+.login-box input{background:var(--s1);border:1px solid var(--brd);border-radius:var(--rs);
+  padding:13px 14px;font-size:15px;color:var(--txt);outline:none}
+.login-box input:focus{border-color:var(--pri)}
+.err{color:var(--err);font-size:12px}.dim{color:var(--dim)}.small{font-size:12px}.center{text-align:center}
+
+/* ── Scan trigger ── */
+.scan-trigger{padding:14px;flex-shrink:0}
+.scan-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:4px;
+  font-size:16px;min-height:52px}
+
+/* ── Home body ── */
+.home-body{flex:1;overflow-y:auto;padding:0}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:6px;color:var(--dim);padding-bottom:60px}
+
+/* ── Scan list (folder-style rows) ── */
+.folder-list{display:flex;flex-direction:column}
+.folder-row{display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid var(--brd)}
+.folder-thumb{width:48px;height:48px;border-radius:8px;background-size:cover;
+  background-position:center;background-color:var(--s2);flex-shrink:0}
+.folder-info{flex:1;display:flex;flex-direction:column;gap:1px}
+.folder-name{font-size:14px;font-weight:500}
+.folder-sub{font-size:11px;color:var(--dim)}
+.folder-status{display:flex;flex-direction:column;align-items:center;gap:1px;min-width:40px}
+.status-emoji{font-size:16px}
+.status-text{font-size:10px;color:var(--dim)}
+
+/* ── Progress bar ── */
+.progress-bar{padding:8px 14px;background:var(--pri);color:#fff;font-size:13px;
+  text-align:center;flex-shrink:0}
+
+/* ── Overlay / Sheet ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;
+  display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--s1);border-radius:18px 18px 0 0;width:100%;max-width:460px;
+  padding:20px 16px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+.sheet h3{font-size:17px;font-weight:600;text-align:center;margin-bottom:14px}
+.sheet-item{width:100%;background:none;border:none;color:var(--txt);font-size:15px;
+  padding:13px 14px;border-radius:var(--rs);cursor:pointer;text-align:right;
+  display:flex;justify-content:space-between;align-items:center}
+.sheet-item:hover,.sheet-item.on{background:var(--s2)}
+
+/* ── Spinner ── */
+.spinner{width:34px;height:34px;border:3px solid var(--brd);
+  border-top-color:var(--pri);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Safe areas ── */
+@supports(padding-top:env(safe-area-inset-top)){
+  .hdr{padding-top:calc(12px + env(safe-area-inset-top))}
+}
