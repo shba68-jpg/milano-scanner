@@ -31,9 +31,13 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
 
+      - name: Print debug SHA-1
+        working-directory: android
+        run: ./gradlew signingReport 2>&1 | grep -A1 "SHA1:"
+
       - name: Build debug APK
         working-directory: android
-        run: chmod +x gradlew && ./gradlew assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
