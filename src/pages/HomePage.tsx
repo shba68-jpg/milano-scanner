@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { DocumentScanner, ResponseType } from "capacitor-document-scanner";
+import { Camera } from "@capacitor/camera";
 import { listScans, saveScan, deleteMultiple, blobToThumbnail, genId, ScanMeta } from "../lib/storage";
 import { processQueue, enqueueScans, isQueueRunning } from "../lib/upload";
 import { getRestaurantLabel, RESTAURANTS } from "../constants";
@@ -16,6 +17,8 @@ export default function HomePage() {
   const [scanning, setScanning] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+  const [galleryPages, setGalleryPages] = useState<Blob[]>([]);
+  const [showCombine, setShowCombine] = useState(false);
 
   const reload = useCallback(() => listScans().then(setScans), []);
   useEffect(() => { reload(); }, [reload]);
@@ -60,6 +63,62 @@ export default function HomePage() {
     } finally {
       setScanning(false);
     }
+  };
+
+  const handleGallery = async () => {
+    if (!restaurant) { setShowPicker(true); return; }
+    try {
+      const result = await Camera.pickImages({ quality: 90 });
+      if (!result.photos || result.photos.length === 0) return;
+      const pages: Blob[] = [];
+      for (const photo of result.photos) {
+        const resp = await fetch(photo.webPath);
+        pages.push(await resp.blob());
+      }
+      if (pages.length > 1) {
+        setGalleryPages(pages);
+        setShowCombine(true);
+      } else {
+        await saveGalleryPages(pages, false);
+      }
+    } catch (e) {
+      console.error("Gallery pick failed:", e);
+    }
+  };
+
+  const saveGalleryPages = async (pages: Blob[], combine: boolean) => {
+    if (combine) {
+      const thumb = await blobToThumbnail(pages[0]);
+      const meta: ScanMeta = {
+        id: genId(),
+        restaurant,
+        thumbnail: thumb,
+        pageCount: pages.length,
+        createdAt: Date.now(),
+        status: "local",
+      };
+      await saveScan(meta, pages);
+    } else {
+      for (const page of pages) {
+        const thumb = await blobToThumbnail(page);
+        const meta: ScanMeta = {
+          id: genId(),
+          restaurant,
+          thumbnail: thumb,
+          pageCount: 1,
+          createdAt: Date.now(),
+          status: "local",
+        };
+        await saveScan(meta, [page]);
+      }
+    }
+    await reload();
+  };
+
+  const handleCombineChoice = async (combine: boolean) => {
+    setShowCombine(false);
+    await saveGalleryPages(galleryPages, combine);
+    setGalleryPages([]);
   };
 
   const pendingScans = scans.filter(
@@ -131,12 +190,18 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Scan button */}
+      {/* Scan + Gallery buttons */}
       <div className="scan-trigger">
-        <button className="btn pri scan-btn" onClick={handleScan} disabled={scanning || uploading}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
-          <span style={{ marginRight: 8 }}>{scanning ? "סורק..." : "צלם חשבונית"}</span>
-        </button>
+        <div className="scan-row">
+          <button className="btn pri scan-btn" onClick={handleScan} disabled={scanning || uploading}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            <span style={{ marginRight: 8 }}>{scanning ? "סורק..." : "צלם חשבונית"}</span>
+          </button>
+          <button className="btn sec gallery-btn" onClick={handleGallery} disabled={scanning || uploading}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>
+            <span style={{ marginRight: 6 }}>גלריה</span>
+          </button>
+        </div>
 
         {pendingScans.length > 0 && !uploading && (
           <button className="btn pri mt8 scan-btn" onClick={handleUploadAll} disabled={isQueueRunning()}>
@@ -201,6 +266,24 @@ export default function HomePage() {
                 {restaurant === r.id && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="3"><path d="M20 6L9 17l-5-5"/></svg>}
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Combine prompt */}
+      {showCombine && (
+        <div className="overlay" onClick={() => { setShowCombine(false); setGalleryPages([]); }}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <h3>נבחרו {galleryPages.length} תמונות</h3>
+            <p style={{ textAlign: "center", color: "var(--dim)", fontSize: 14, marginBottom: 14 }}>
+              האם אלה עמודים של אותה חשבונית?
+            </p>
+            <button className="btn pri full mt8" onClick={() => handleCombineChoice(true)}>
+              כן — חשבונית אחת ({galleryPages.length} עמודים)
+            </button>
+            <button className="btn sec full mt8" onClick={() => handleCombineChoice(false)}>
+              לא — כל תמונה בנפרד
+            </button>
           </div>
         </div>
       )}
