@@ -1,21 +1,19 @@
 import { format, formatDistanceToNow } from 'date-fns'
 import { he } from 'date-fns/locale'
 
-const currencyFormatter = new Intl.NumberFormat('he-IL', {
-  style: 'currency',
-  currency: 'ILS',
+const currencyFormatter = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
 })
 
-const compactCurrencyFormatter = new Intl.NumberFormat('he-IL', {
-  style: 'currency',
-  currency: 'ILS',
+const compactCurrencyFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 })
 
+/** Format as ₪1,234.56 — shekel sign leads the number (Israeli UX convention). */
 export function formatCurrency(value: number, compact = false): string {
-  return (compact ? compactCurrencyFormatter : currencyFormatter).format(value)
+  const formatter = compact ? compactCurrencyFormatter : currencyFormatter
+  return `₪${formatter.format(value)}`
 }
 
 export function formatNumber(value: number): string {
